@@ -10,10 +10,29 @@ import org.springframework.stereotype.Component;
 public class ScopeChecker {
     public boolean canAccessUser(Long userId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (!(auth instanceof JwtAuthenticationToken jwtAuth)) {
+
+        if(!(auth instanceof JwtAuthenticationToken jwtAuth)) {
             return false;
         }
+
         Jwt jwt = jwtAuth.getToken();
+
+        if (hasScope(auth, "admin")) {
+            return true;
+        }
+
+        if (hasScope(auth, "read:users")) {
+            String tokenUserId = jwt.getClaimAsString("userId");
+            return userId.toString().equals(tokenUserId);
+        }
+
+        return false;
+    }
+
+    public boolean canModifyUser(Long userId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        return hasScope(auth, "admin") || hasScope(auth, "write:users");
     }
 
     private boolean hasScope(Authentication auth, String scope) {

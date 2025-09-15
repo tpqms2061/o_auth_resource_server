@@ -1,6 +1,6 @@
+
 package com.example.o_auth_resource_server.resource;
 
-import jakarta.servlet.http.HttpServlet;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,35 +30,35 @@ import java.util.Base64;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class ResourceServerConfig {
-
     @Value("${jwt.public-key}")
-    private Resource publicResource;
+    private Resource publickeyResource;
 
     @Bean
     public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) throws Exception {
-
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/oauth/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/users/**")
-                        .hasAuthority("SCOPE_read:users")
-                        .requestMatchers(HttpMethod.POST, "/api/users/**")
-                        .hasAuthority("SCOPE_write:users")
-                        .requestMatchers("/api/admin/**")
-                        .hasAuthority("SCOPE_admin")
-                        .anyRequest().authenticated()
+                .sessionManagement(s -> s
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .oauth2ResourceServer(oauth2->oauth2
-                        .jwt(jwt->jwt
+                .authorizeHttpRequests(
+                        auth -> auth
+                                .requestMatchers("/oauth/**").permitAll()
+                                .requestMatchers("/h2-console/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/users/**")
+                                .hasAuthority("SCOPE_read:users")
+                                .requestMatchers(HttpMethod.POST, "/api/users/**")
+                                .hasAuthority("SCOPE_write:users")
+                                .requestMatchers("/api/admin/**")
+                                .hasAuthority("SCOPE_admin")
+                                .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
                                 .decoder(jwtDecoder())
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
                 )
                 .headers(AbstractHttpConfigurer::disable)
-                //h2 콘솔떄문에 header 를 사용한것
                 .build();
     }
 
@@ -71,6 +71,7 @@ public class ResourceServerConfig {
             throw new RuntimeException("JWT 디코더 설정 실패", e);
         }
     }
+
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -79,6 +80,7 @@ public class ResourceServerConfig {
 
         JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
         authenticationConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+
         return authenticationConverter;
     }
 
